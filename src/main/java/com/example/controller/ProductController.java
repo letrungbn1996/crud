@@ -1,9 +1,11 @@
 package com.example.controller;
 
  
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
- 
+
+import javax.validation.constraints.NotNull;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -34,20 +37,59 @@ public class ProductController {
 	private static final Logger LOGGER = LogManager.getLogger(ProductController.class);
 
 	@RequestMapping(value = "/products", method = RequestMethod.GET)
-	public ResponseEntity<List<Product>> findAllProduct() {
+	ResponseEntity<List<Product>> findAllProduct() {
 		List<Product> products = productService.findAllProduct();
 		if (products.isEmpty()) {
 			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 		}
 		return new ResponseEntity<>(products, HttpStatus.OK);
 	}
-	 
- 
+	
+	@RequestMapping(value = "/productsSortPage", method = RequestMethod.GET)
+	ResponseEntity<List<Product>> findAllProductSortPage(
+			@RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(defaultValue = "id") String sortBy) {
+		List<Product> products = productService.getAllEmployeesSortPage(pageNo,pageSize,sortBy);
+		 
+		return new ResponseEntity<>(products,new HttpHeaders(), HttpStatus.OK);
+	}
+//	@RequestMapping(value = "/productsSort", method = RequestMethod.GET)
+//	ResponseEntity<List<Product>> findAllProductSort(
+//			@RequestParam(defaultValue = "id") HashMap<String, String> sortBy) {
+//		List<Product> products = productService.getAllEmployeesSort(sortBy);
+//		if (products.isEmpty()) {
+//			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+//		}
+//		return new ResponseEntity<>(products, HttpStatus.OK);
+//	}
+	
+	
+	@RequestMapping(value = "/productsSortMuti", method = RequestMethod.GET)
+	ResponseEntity<List<Product>> findAllProductSort(
+			@RequestParam(defaultValue = "id") String sortBy1,
+			@RequestParam(defaultValue = "id") String sortBy2) {
+		List<Product> products = productService.getAllEmployeesMutiSort(sortBy1, sortBy2);
+		if (products.isEmpty()) {
+			return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+		}
+		return new ResponseEntity<>(products, HttpStatus.OK);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	@RequestMapping(value = "/product/{id}",method = RequestMethod.GET,
             		produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Product> getProductById(@PathVariable("id") Integer id) {
-        Optional<Product> product = productService.findById(id);
+	ResponseEntity<Product> getProductById(@PathVariable("id") Integer id) {        
+		Optional<Product> product = productService.findById(id);
         
         if (!product.isPresent()) {
         	LOGGER.error(product);
@@ -57,8 +99,8 @@ public class ProductController {
     }
 
 	@RequestMapping(value = "/product",method = RequestMethod.POST)
-    public ResponseEntity<Product> createProduct(
-            @RequestBody Product product,
+    ResponseEntity<Product> createProduct(
+    		@RequestBody Product product,
             UriComponentsBuilder builder) {
         productService.save(product);
         HttpHeaders headers = new HttpHeaders();
@@ -67,9 +109,8 @@ public class ProductController {
        return new ResponseEntity<>(product, HttpStatus.CREATED);
     }
 	
-	
 	@RequestMapping(value = "/product/{id}",method = RequestMethod.POST)
-    public ResponseEntity<Product> updateProduct(
+    ResponseEntity<Product> updateProduct(
             @PathVariable("id") Integer id,
             @RequestBody Product product) {
         Optional<Product> currentProduct = productService.findById(id);
@@ -83,8 +124,6 @@ public class ProductController {
         return new ResponseEntity<>(currentProduct.get(), HttpStatus.OK);
     }
 	
-	 
- 
 	@RequestMapping(value = "/product/{id}", method = RequestMethod.DELETE)
 	public void deleteProduct(@PathVariable("id") Integer id) { 
 		productService.remove(id);
